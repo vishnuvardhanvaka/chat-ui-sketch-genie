@@ -18,13 +18,13 @@ const SuggestedPrompt: React.FC<SuggestedPromptProps> = ({
   return (
     <button
       className={cn(
-        'text-left w-full p-4 rounded-lg border border-gray-800 bg-black/40 hover:bg-gray-900 transition-colors',
+        'text-left w-full p-4 rounded-lg border border-gray-800 bg-black/30 hover:bg-gray-900 transition-colors',
         className
       )}
       onClick={() => onClick(`${title} ${subtitle}`)}
     >
-      <p className="text-white text-sm font-medium">{title}</p>
-      <p className="text-gray-400 text-sm">{subtitle}</p>
+      <p className="text-white text-sm">{title}</p>
+      <p className="text-gray-500 text-sm">{subtitle}</p>
     </button>
   );
 };

@@ -1,14 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ChatLogo from './ChatLogo';
 import MessageInput from './MessageInput';
 import SuggestedPrompt from './SuggestedPrompt';
+import MessageBubble from './MessageBubble';
+import Header from './Header';
 import { cn } from '@/lib/utils';
 
 interface Message {
   id: string;
   text: string;
   isUser: boolean;
+  isCode?: boolean;
 }
 
 const examplePrompts = [
@@ -34,9 +37,23 @@ interface ChatUIProps {
   className?: string;
 }
 
+const poem = `In the quiet of the night,
+Stars whisper tales of light.
+Dreams weave through the dark,
+Guiding us with a spark.`;
+
 const ChatUI: React.FC<ChatUIProps> = ({ className }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, loading]);
 
   const handleSendMessage = (text: string) => {
     if (!text.trim()) return;
@@ -53,26 +70,46 @@ const ChatUI: React.FC<ChatUIProps> = ({ className }) => {
     
     // Simulate response (would be replaced with actual API call)
     setTimeout(() => {
-      const responseMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: `This is a simulated response to: "${text}"`,
-        isUser: false
-      };
+      let responseMessage: Message;
+      
+      if (text.toLowerCase().includes('poem')) {
+        responseMessage = {
+          id: (Date.now() + 1).toString(),
+          text: poem,
+          isUser: false
+        };
+      } else if (text.toLowerCase().includes('code') || text.toLowerCase().includes('algorithm')) {
+        responseMessage = {
+          id: (Date.now() + 1).toString(),
+          text: `function dijkstra(graph, start) {\n  const distances = {};\n  const visited = {};\n  const previous = {};\n  const queue = [];\n\n  // Initialize\n  for (let vertex in graph) {\n    distances[vertex] = Infinity;\n    previous[vertex] = null;\n    queue.push(vertex);\n  }\n  distances[start] = 0;\n\n  while (queue.length) {\n    // Find minimum distance vertex\n    queue.sort((a, b) => distances[a] - distances[b]);\n    const current = queue.shift();\n    visited[current] = true;\n\n    // Update neighbors\n    for (let neighbor in graph[current]) {\n      if (visited[neighbor]) continue;\n      const distance = distances[current] + graph[current][neighbor];\n      if (distance < distances[neighbor]) {\n        distances[neighbor] = distance;\n        previous[neighbor] = current;\n      }\n    }\n  }\n\n  return { distances, previous };\n}`,
+          isUser: false,
+          isCode: true
+        };
+      } else {
+        responseMessage = {
+          id: (Date.now() + 1).toString(),
+          text: `This is a simulated response to: "${text}"`,
+          isUser: false
+        };
+      }
       
       setMessages((prev) => [...prev, responseMessage]);
       setLoading(false);
-    }, 1000);
+    }, 1500);
   };
 
   return (
     <div className={cn('flex flex-col h-screen bg-black', className)}>
+      <Header />
+      
       <div className="flex-1 overflow-auto p-4 pb-20 space-y-4">
         {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center space-y-6">
+          <div className="h-full flex flex-col items-center justify-center space-y-6 px-4">
             <ChatLogo />
+            
             <div className="max-w-xl text-center space-y-4">
-              <p className="text-white">This is an <span className="text-white font-semibold">open source</span> chatbot template built with Next.js and the AI SDK by Vercel. It uses the <code className="bg-gray-800 px-1 py-0.5 rounded text-sm">streamText</code> function in the server and the <code className="bg-gray-800 px-1 py-0.5 rounded text-sm">useChat</code> hook on the client to create a seamless chat experience.</p>
-              <p className="text-white">You can learn more about the AI SDK by visiting the <a href="#" className="underline">docs</a>.</p>
+              <p className="text-white text-sm">This is an <span className="text-white font-semibold underline">open source</span> chatbot template built with Next.js and the AI SDK by Vercel. It uses the <code className="bg-gray-800 px-1 py-0.5 rounded text-sm">streamText</code> function in the server and the <code className="bg-gray-800 px-1 py-0.5 rounded text-sm">useChat</code> hook on the client to create a seamless chat experience.</p>
+              <p className="text-white text-sm">You can learn more about the AI SDK by visiting the <a href="#" className="underline">docs</a>.</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 w-full max-w-2xl">
@@ -87,35 +124,30 @@ const ChatUI: React.FC<ChatUIProps> = ({ className }) => {
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 max-w-3xl mx-auto">
             {messages.map((message) => (
-              <div
+              <MessageBubble
                 key={message.id}
-                className={cn(
-                  "p-4 rounded-lg max-w-[80%]",
-                  message.isUser
-                    ? "bg-gray-800 ml-auto"
-                    : "bg-gray-900 mr-auto"
-                )}
-              >
-                <p className="text-white">{message.text}</p>
-              </div>
+                content={message.text}
+                isUser={message.isUser}
+                isCode={message.isCode}
+              />
             ))}
+            
             {loading && (
-              <div className="bg-gray-900 p-4 rounded-lg max-w-[80%] mr-auto">
-                <div className="flex space-x-2">
-                  <div className="h-2 w-2 bg-gray-400 rounded-full animate-pulse"></div>
-                  <div className="h-2 w-2 bg-gray-400 rounded-full animate-pulse delay-75"></div>
-                  <div className="h-2 w-2 bg-gray-400 rounded-full animate-pulse delay-150"></div>
-                </div>
-              </div>
+              <MessageBubble 
+                content=""
+                isUser={false}
+                isThinking={true}
+              />
             )}
+            <div ref={messagesEndRef} />
           </div>
         )}
       </div>
       
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-black">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <MessageInput onSendMessage={handleSendMessage} />
         </div>
       </div>
