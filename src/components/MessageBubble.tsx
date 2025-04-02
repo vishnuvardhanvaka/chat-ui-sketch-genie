@@ -33,8 +33,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   
   if (isUser) {
     return (
-      <div className="mb-4">
-        <div className="inline-block bg-white text-black py-2 px-4 rounded-full max-w-fit ml-auto">
+      <div className="flex justify-end mb-4">
+        <div className="bg-white text-black py-2 px-4 rounded-full max-w-[80%]">
           {content}
         </div>
       </div>
